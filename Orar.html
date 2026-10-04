@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Orar</title>
+<style>
+:root{--bg:#17141b;--fg:#f1eef6;--mut:#a39fad;--base:#17141b;--pill:#221f28;--on:#f1eef6;--onfg:#17141b;
+--dt:#ff5d6c;--p3:#a78bfa;--sa:#60a5fa;--fa:#ffab40;--sp:#4ade80;--ot:#2dd4bf;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme]){--bg:#f6f4f9;--fg:#1d1a22;--mut:#6b6676;--base:#fff;--pill:#e9e5ef;--on:#1d1a22;--onfg:#fff}}
+:root[data-theme="light"]{--bg:#f6f4f9;--fg:#1d1a22;--mut:#6b6676;--base:#fff;--pill:#e9e5ef;--on:#1d1a22;--onfg:#fff}
+:root[data-theme="dark"]{--bg:#17141b;--fg:#f1eef6;--mut:#a39fad;--base:#17141b;--pill:#221f28;--on:#f1eef6;--onfg:#17141b}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.3 -apple-system,"Inter","Segoe UI",Roboto,sans-serif;padding:24px 16px 40px;max-width:640px;margin-inline:auto}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+h1{font-size:2.1rem;margin:8px 0 4px;font-weight:800}
+.sub{color:var(--mut);margin:0}
+.clock{text-align:right}
+.clock b{display:block;font-size:2rem;font-weight:800;font-variant-numeric:tabular-nums}
+.clock span{color:var(--mut);font-size:.95rem}
+.seg{display:flex;background:var(--pill);border-radius:16px;padding:6px;margin:18px 0}
+.seg button{flex:1;border:0;background:none;color:var(--mut);font:inherit;font-weight:700;padding:11px 6px;border-radius:11px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--on);color:var(--onfg)}
+.seg button:focus-visible{outline:2px solid var(--sa);outline-offset:2px}
+.status{padding:16px 18px;border-radius:18px;background:var(--pill);margin-bottom:22px}
+.status .s1{font-weight:800;font-size:1.15rem}
+.status .s2{color:var(--mut);margin-top:4px}
+.status.live{background:color-mix(in srgb,var(--sp) 18%,var(--base))}
+.status.brk{background:color-mix(in srgb,var(--fa) 18%,var(--base))}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin-bottom:8px;font-size:.95rem}
+.legend span{display:flex;align-items:center;gap:8px}
+.legend i{width:18px;height:18px;border-radius:5px;background:var(--c)}
+h2{font-size:1.35rem;margin:28px 0 12px}
+h2.azi::after{content:" · azi";color:var(--sp);font-size:1rem;font-weight:700}
+.card{display:grid;grid-template-columns:112px 1fr;gap:12px;padding:14px 16px;margin-bottom:10px;border-radius:18px;border-left:5px solid var(--c);background:color-mix(in srgb,var(--c) 16%,var(--base))}
+.card.now{outline:2px solid var(--c)}
+.t{color:var(--c);font-weight:700;font-size:1.05rem}
+.n{font-weight:700;font-size:1.15rem}
+.l{color:var(--mut);margin-top:4px}
+.sau{text-align:center;color:var(--mut);font-size:.9rem;margin:-2px 0 8px}
+.gap{text-align:center;color:var(--mut);font-size:.9rem;margin:0 0 10px}
+.gap span{background:var(--pill);padding:4px 12px;border-radius:99px}
+</style>
+</head>
+<body>
+<div class="top">
+  <div><h1>Orar</h1><p class="sub">Săptămâna tip</p></div>
+  <div class="clock"><b id="ora">--:--:--</b><span id="data"></span></div>
+</div>
+<div class="seg" role="group" aria-label="Temă">
+  <button data-th="auto">Automat</button>
+  <button data-th="dark">Întunecat</button>
+  <button data-th="light">Luminos</button>
+</div>
+<div class="status" id="status"></div>
+<div class="legend" id="legend"></div>
+<div id="orar"></div>
+<script>
+const C={dt:["Amf. Dan Theodorescu","--dt"],p3:["Amf. P3","--p3"],sa:["Amf. Sahia","--sa"],fa:["Aula Farmacie","--fa"],sp:["Sport","--sp"],ot:["Altă locație","--ot"]};
+const Z=[
+["Luni",1,[
+[["08:00","12:00","Anatomie","dt","Amf. Dan Theodorescu"]],
+[["12:00","16:00","Morfologia dinților","p3","Amf. P3, Facultatea de utilaj tehnologic"]],
+[["16:00","18:00","Biofizica","p3","Amf. P3"]]]],
+["Marți",2,[
+[["08:00","10:00","Biofizica","p3","Amf. P3"]],
+[["10:00","12:00","Biochimie","sa","Amf. Sahia"],["10:00","12:00","Fiziologie","dt","Amf. Dan Theodorescu"]],
+[["12:00","14:00","I.M.B","ot",""]],
+[["14:00","16:00","Sport","sp","Eroilor"]]]],
+["Miercuri",3,[
+[["10:00","12:00","Biologie Celulară și Moleculară","fa","Aula facultății de Farmacie"]],
+[["12:00","14:00","Biochimie","sa","Amf. Sahia"]],
+[["14:00","16:00","Morfologia dinților","p3","Amf. P3"]]]],
+["Joi",4,[
+[["10:00","12:00","Anatomie","dt","Amf. Dan Theodorescu"]],
+[["16:00","18:00","Fiziologie","dt","Amf. Dan Theodorescu"]],
+[["18:00","20:00","Informatică medicală","p3","Amf. P3"]]]],
+["Vineri",5,[
+[["12:00","14:00","B.C.M","fa","Aula facultății de Farmacie"]],
+[["16:00","20:00","Noțiuni fundamentale de chimie","ot","Facultatea de Medicină"],["16:00","20:00","Abilități chirurgicale","ot","Institutul Oncologic „Prof. Dr. Alexandru Trestioreanu”"]]]]
+];
+const m=s=>{const[a,b]=s.split(":");return +a*60+ +b};
+const fmt=x=>{const h=Math.floor(x/60),r=Math.round(x%60);return h?(r?`${h} h ${r} min`:`${h} h`):`${r} min`};
+document.getElementById("legend").innerHTML=Object.values(C).map(v=>`<span style="--c:var(${v[1]})"><i></i>${v[0]}</span>`).join("");
+function render(){
+  const now=new Date(),dow=now.getDay(),nm=now.getHours()*60+now.getMinutes()+now.getSeconds()/60;
+  document.getElementById("orar").innerHTML=Z.map(([zi,d,sl])=>`<h2 class="${d===dow?'azi':''}">${zi}</h2>`+sl.map((g,gi)=>{
+    const gap=gi?m(g[0][0])-m(sl[gi-1][0][1]):0;
+    const live=d===dow&&nm>=m(g[0][0])&&nm<m(g[0][1]);
+    return (gap>0?`<div class="gap"><span>Pauză ${fmt(gap)}</span></div>`:'')+g.map((e,i)=>
+    `${i?'<div class="sau">sau</div>':''}<div class="card${live?' now':''}" style="--c:var(${C[e[3]][1]})"><div class="t">${e[0]} - ${e[1]}</div><div><div class="n">${e[2]}</div>${e[4]?`<div class="l">${e[4]}</div>`:''}</div></div>`).join("")}).join("")).join("");
+}
+function tick(){
+  const now=new Date(),dow=now.getDay(),nm=now.getHours()*60+now.getMinutes()+now.getSeconds()/60;
+  document.getElementById("ora").textContent=now.toLocaleTimeString("ro-RO",{hour12:false});
+  document.getElementById("data").textContent=now.toLocaleDateString("ro-RO",{weekday:"long",day:"numeric",month:"long"});
+  const st=document.getElementById("status"),z=Z.find(x=>x[1]===dow);
+  let a="",b="",cl="status";
+  if(!z){a="Weekend liber";b="Luni începe din nou programul."}
+  else{
+    const gs=z[2],cur=gs.find(g=>nm>=m(g[0][0])&&nm<m(g[0][1])),nxt=gs.find(g=>m(g[0][0])>nm);
+    if(cur){cl+=" live";a="Acum: "+cur.map(e=>e[2]).join(" / ");b=`Mai sunt ${fmt(m(cur[0][1])-nm)} până la ${cur[0][1]}`+(nxt?` · urmează ${nxt.map(e=>e[2]).join(" / ")} la ${nxt[0][0]}`:"")}
+    else if(nxt&&nm>=m(gs[0][0][0])){cl+=" brk";a=`Pauză: încă ${fmt(m(nxt[0][0])-nm)}`;b=`Urmează ${nxt.map(e=>e[2]).join(" / ")} la ${nxt[0][0]}`}
+    else if(nxt){a=`Prima oră începe în ${fmt(m(nxt[0][0])-nm)}`;b=`${nxt.map(e=>e[2]).join(" / ")} la ${nxt[0][0]}`}
+    else{a="Gata pentru azi";b="Nu mai ai ore."}
+  }
+  st.className=cl;st.innerHTML=`<div class="s1">${a}</div><div class="s2">${b}</div>`;
+}
+function setTheme(t,save){
+  const r=document.documentElement;
+  if(t==="dark"||t==="light")r.setAttribute("data-theme",t);else r.removeAttribute("data-theme");
+  document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.th===t));
+  if(save){try{localStorage.setItem("orar-tema",t)}catch(e){}}
+}
+document.querySelectorAll(".seg button").forEach(x=>x.onclick=()=>setTheme(x.dataset.th,true));
+let saved="auto";try{saved=localStorage.getItem("orar-tema")||"auto"}catch(e){}
+setTheme(saved,false);
+render();tick();
+setInterval(tick,1000);setInterval(render,30000);
+</script>
+</body>
+</html>
